@@ -11,6 +11,7 @@ from train.train_tool import arcface_loss,read_single_tfrecord,average_gradients
 from core import Arcface_model,config
 import time
 import os
+from evaluate.evaluate import evaluation
 
 def train(image,label,train_phase_dropout,train_phase_bn):
 
@@ -75,7 +76,7 @@ def train(image,label,train_phase_dropout,train_phase_bn):
         train_accuracy = tf.reduce_mean(tf.cast(tf.equal(pred, label), tf.float32))
         tf.summary.scalar('train_accuracy',train_accuracy) 
         
-    saver=tf.train.Saver(max_to_keep=10)
+    saver=tf.train.Saver(max_to_keep=20)
     merged=tf.summary.merge_all() 
     
     train_images,train_labels=read_single_tfrecord(addr,batch_size,img_size)
@@ -87,7 +88,7 @@ def train(image,label,train_phase_dropout,train_phase_bn):
                   tf.local_variables_initializer()))
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(sess=sess,coord=coord)
-        writer_train=tf.summary.FileWriter("./model/%s"%(model_name),sess.graph)
+        writer_train=tf.summary.FileWriter(model_path,sess.graph)
         print("start")
         train_begin=time.time()
         try:
@@ -97,21 +98,29 @@ def train(image,label,train_phase_dropout,train_phase_bn):
                 if(i%100==0):
                     summary=sess.run(merged,feed_dict={image:image_batch,label:label_batch,train_phase_dropout:True,train_phase_bn:True})
                     writer_train.add_summary(summary,i)
-                    print('100-time: ',time.time()-train_begin)
+#                     print('100-time: ',time.time()-train_begin)
                     train_begin=time.time()
                 if(i%1000==0):
                     print('times: ',i)    
-                    print('train_accuracy: ',sess.run(train_accuracy,feed_dict={image:image_batch,label:label_batch,train_phase_dropout:True,train_phase_bn:True}))
-                    print('train_loss: ',sess.run(train_loss,{image:image_batch,label:label_batch,train_phase_dropout:True,train_phase_bn:True}))                    
+#                     print('train_accuracy: ',sess.run(train_accuracy,feed_dict={image:image_batch,label:label_batch,train_phase_dropout:True,train_phase_bn:True}))
+#                     print('train_loss: ',sess.run(train_loss,{image:image_batch,label:label_batch,train_phase_dropout:True,train_phase_bn:True}))                    
                     print('time: ',time.time()-begin)
-                    if(i%10000==0):
-                        saver.save(sess,os.path.join(model_path,model_name),global_step=i)
+                if((i>config.eval_start_times)&(i%config.eval_gapeval_gap==0)):
+                    f.write("itrations: %d"%(i)+'\n')
+                    for dataset_path in config.eval_datasets:
+                        tpr, fpr, accuracy, best_thresholds = evaluation(sess, batch_size, img_size, dataset_path, dropout_flag=config.eval_dropout_flag, bn_flag=config.eval_bn_flag, embd=net, image=image, train_phase_dropout=train_phase_dropout, train_phase_bn=train_phase_bn) 
+                        print("%s datasets get %.3f acc"%(dataset_path.split("/")[-1].split(".")[0],accuracy))
+                        f.write("\t %s \t %.3f \t \t "%(dataset_path.split("/")[-1].split(".")[0],accuracy)+str(best_thresholds)+'\n')
+                    f.write('\n')
+                if(i%config.model_save_gap==0):
+                    saver.save(sess,os.path.join(model_path,model_name),global_step=i)
         except  tf.errors.OutOfRangeError:
             print("finished")
         finally:
             coord.request_stop()
             writer_train.close()
         coord.join(threads)
+        f.close()
 
         
 def main():
@@ -129,13 +138,14 @@ if __name__ == "__main__":
     
     img_size=config.img_size
     batch_size=config.batch_size
-    addr=config.addr
+    addr=config.addrt
     model_name=config.model_name
     train_step=config.train_step
-    model_path=config.model_path
+    model_path=config.model_patht
     
     begin=time.time()
-
     
+    f = open("./eval_record.txt", 'w')
+    f.write("\t dataset \t accuracy \t best_thresholds \t"+'\n')    
     main()
-# tensorboard --logdir=/home/dell/Desktop//InsightFace_1/model/Arcface/
+# tensorboard --logdir=/home/dell/Desktop/insightface/model/Arcface_model/
