@@ -7,7 +7,6 @@ import sys
 sys.path.append("../")
 
 import numpy as np
-from core import config
 import math
 from sklearn.model_selection import KFold
 
@@ -42,20 +41,20 @@ def run_emdb(sess,eval_images,image_size,eval_batch_size, **params):
     train_phase_dropout = params["train_phase_dropout"]
     train_phase_bn = params["train_phase_bn"]    
 
-    batch_num = len(eval_images)//eval_batch_size
-    left = int(len(eval_images)/eval_batch_size)
+    batch_num = len(eval_images) // eval_batch_size
+    left = len(eval_images) % eval_batch_size
     embd_list=[]
     
     for i in range(batch_num):
-        image_batch=eval_images[i*eval_batch_size:(i+1)*eval_batch_size]
-        eval_embd=sess.run(embd,feed_dict={image:image_batch,train_phase_dropout:dropout_flag,train_phase_bn:bn_flag})
-        embd_list+=list(eval_embd)
+        image_batch = eval_images[i*eval_batch_size: (i+1)*eval_batch_size]
+        eval_embd = sess.run(embd,feed_dict={image:image_batch,train_phase_dropout:dropout_flag,train_phase_bn:bn_flag})
+        embd_list += list(eval_embd)
         
     if left:
         image_batch = np.zeros([eval_batch_size, image_size, image_size, 3])
         image_batch[:left, :, :, :] = eval_images[-left:]
         eval_embd=sess.run(embd,feed_dict={image:image_batch,train_phase_dropout:dropout_flag,train_phase_bn:bn_flag})
-        embd_list+=list(eval_embd)        
+        embd_list += list(eval_embd)[:left]        
         
     return np.array(embd_list)
 
@@ -87,8 +86,8 @@ def calculate_distance(embeddings_1, embeddings_2, dist_sign="Euclidian"):
         dot = np.sum(np.multiply(embeddings_1, embeddings_2), axis=1)
         norm = np.linalg.norm(embeddings_1, axis=1) * np.linalg.norm(embeddings_2, axis=1)
         similarity = dot/norm
-        dist = np.arccos(similarity) / math.pi        
-        
+        dist = np.arccos(similarity) / math.pi 
+
     return dist   
 
 
@@ -148,7 +147,7 @@ def calculate_acc(threshold, dist, actual_issame):
     ----------
         tpr : int
         fpr : int     
-        accuracy : int           
+        acc : int           
         
     Returns:
     -------
@@ -157,7 +156,6 @@ def calculate_acc(threshold, dist, actual_issame):
         calculate_acc
     """       
     predict_issame = np.less(dist, threshold)
-    
     tp = np.sum(np.logical_and(predict_issame, actual_issame))
     fp = np.sum(np.logical_and(predict_issame, np.logical_not(actual_issame)))
     tn = np.sum(np.logical_and(np.logical_not(predict_issame), np.logical_not(actual_issame)))

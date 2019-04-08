@@ -11,7 +11,6 @@ from core import Arcface_model,config
 from .evaluate_tool import run_emdb,calculate_roc
 import io
 from scipy import misc
-from core import Arcface_model
 import cv2
 import pickle
 import tensorflow as tf
@@ -40,9 +39,8 @@ def load_bin(path, image_size=112):
     return (images, images_f, issame_list)
 
 
-def evaluation(sess, eval_batch_size, image_size, dataset_path=config.eval_dir, **params):
+def evaluation(sess, images, images_f, issame_list, eval_batch_size, image_size, **params):
 
-    images , images_f , issame_list =  load_bin(dataset_path,image_size)
     issame_list = np.array(issame_list)
     embds_arr = run_emdb(sess, images, image_size, eval_batch_size, **params)
     embds_f_arr = run_emdb(sess,images_f, image_size, eval_batch_size, **params)
