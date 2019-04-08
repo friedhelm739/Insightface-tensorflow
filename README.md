@@ -5,7 +5,7 @@
 复现[ArcFace Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/abs/1801.07698)论文，参考了众多复现代码，在此附上链接并对表示感谢~
 
 * https://github.com/deepinsight/insightface
-* https://github.com/luckycallor/InsightFace-tensorflow(非常感谢)
+* https://github.com/luckycallor/InsightFace-tensorflow (非常感谢)
 * https://github.com/auroua/InsightFace_TF
 * https://github.com/tensorflow/models
 
