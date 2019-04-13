@@ -31,7 +31,7 @@ version 0.3:
 
 ## Face Recognization System
 
-Face recognizer is in */recognizer*，Face detection is based on my[MTCNN](https://github.com/friedhelm739/MTCNN-tensorflow) repository；
+Face recognizer is in */recognizer*，Face detection is based on my [MTCNN](https://github.com/friedhelm739/MTCNN-tensorflow) repository；
 
 overview of face-recognizer's interface：
 
