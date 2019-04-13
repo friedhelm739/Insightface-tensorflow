@@ -44,6 +44,6 @@ overview of face-recognizer's interface：
 >Extended interface(update in future version)：
 
 * add_customs ： add fresh person information to database,or used like add_embds;
-* add_embds ： update embeddings information of target member(s) from database(old data will update by average);
-* update_customs ： update embeddings information of target member(s) from database(old data will be replaced);
+* add_embds ： update embedding information of target member(s) from database(old data will update by average);
+* update_customs ： update embedding information of target member(s) from database(old data will be replaced);
 * del_customs : delete all information of target member(s) from database;
