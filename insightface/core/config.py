@@ -15,6 +15,7 @@ eval_dir = './data/lfw_face.db'
 eval_datasets_self = ['./data/lfw_face.db']
 eval_datasets = ["./data/lfw.bin","./data/agedb_30.bin","./data/calfw.bin","./data/cfp_ff.bin","./data/cfp_fp.bin","./data/cplfw.bin",'./data/lfw_face.db']
 
+
 # model parameters
 model_params = {"backbone_type": "resnet_v2_m_50",
                 "out_type" : "E",
@@ -22,6 +23,7 @@ model_params = {"backbone_type": "resnet_v2_m_50",
                 "weight_decay": 0.0005,
                 "keep_prob":0.4,
                 "embd_size":512}
+
 
 # training parameters
 s = 64.0
@@ -43,17 +45,19 @@ model_path="../model/Arcface_model"
 gpu_num=2
 model_save_gap = 30000
 
+
 # evaluation parameters
 eval_dropout_flag = False
 eval_bn_flag = False
 
-# face database parameters
-custom_dir = './data/custom'
-arc_model_name = 'Arcface-330000'
-arc_model_path = './model/Arcface_model/Arcface-330000'
 
-base_dir = './model/MTCNN_model'
+# face database parameters
+custom_dir = '../data/custom'
+arc_model_name = 'Arcface-330000'
+arc_model_path = '../model/Arcface_model/Arcface-330000'
+
+base_dir = '../model/MTCNN_model'
 mtcnn_model_path = [os.path.join(base_dir,"Pnet_model/Pnet_model.ckpt-20000"),
                     os.path.join(base_dir,"Rnet_model/Rnet_model.ckpt-40000"),
                     os.path.join(base_dir,"Onet_model/Onet_model.ckpt-40000")] 
-embds_save_dir = "./data/face_db"
+embds_save_dir = "../data/face_db"

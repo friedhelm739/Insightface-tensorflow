@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+
+@author: friedhelm
+"""
 import tensorflow as tf
 from train.train_tool import arcface_loss,read_single_tfrecord,average_gradients
 from core import Arcface_model,config
@@ -142,10 +147,10 @@ if __name__ == "__main__":
     
     img_size = config.img_size
     batch_size = config.batch_size
-    addr = config.addrt
+    addr = config.addr
     model_name = config.model_name
     train_step = config.train_step
-    model_path = config.model_patht
+    model_path = config.model_path
     eval_datasets = config.eval_datasets
     
     begin=time.time()

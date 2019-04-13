@@ -2,8 +2,6 @@
 
 * version 0.3更新中；
 
->core.config 中相对地址由于调试原因可能出现问题
-
 复现[ArcFace Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/abs/1801.07698)论文，参考了众多复现代码，在此附上链接并对表示感谢~
 
 * https://github.com/deepinsight/insightface
@@ -15,20 +13,20 @@
 
 version 0.3:
 
-* ubuntu16.04+2*GTX 1080ti+Python3.6+Anaconda5.2.0+Tensorflow1.7-gpu+MySQL5.7.25
+* ubuntu16.04 + 2*GTX 1080ti + Python3.6 + Anaconda5.2.0 + Tensorflow1.7-gpu + MySQL5.7.25
 
 ## 结果
 
 |model|lfw|calfw|cplfw|agedb_30|cfp_ff|cfp_fp|lfw_face|
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
-|resnet_v2_m_50|0.979|0.878|0.823|0.886|0.976|0.904|0.866|
+|resnet_v2_m_50(prelu)|0.979|0.878|0.823|0.886|0.976|0.904|0.866|
+|resnet_v2_m_50(leaky_relu)|0.992|0.932|0.860|0.935|0.990|0.910|0.943|
 
 >lfw_face 为使用自己的mtcnn模型输出的lfw人脸框制作出来的数据
 
 ## 总结
 
-* 在训练准确率曲线逼近100%收敛的情况下，同一模型下自己训练多次的insightface模型eval效果均不如其他人，不知为何；
-* 1个epoch后eval就已经收敛了，代码检查无错，存在着疑惑；
+* 模型其他结构未动，更换了激活函数prelu替换leaky_relu就能降低最高5%的准确率，relu未实验，而源码用的就是prelu，这就奇了怪了；
 * 识别准确率受到人脸检测的极大干扰；
 
 ## 人脸识别系统
@@ -48,3 +46,4 @@ version 0.3:
 * add_customs ： 向数据库内添加新增人员或增加现有人员数据接口；
 * add_embds ： 向数据库内增加现有人员数据接口；
 * update_customs ： 向数据库内更新现有人员数据接口(旧数据会被替换)；
+* del_customs : 删除数据库中指定成员的全部信息；

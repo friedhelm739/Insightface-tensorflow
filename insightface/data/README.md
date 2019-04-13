@@ -1,1 +1,1 @@
-# 请将训练数据与eval数据放入此文件夹下
+# please put both the training/eval data in this document

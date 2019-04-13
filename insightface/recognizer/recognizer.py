@@ -16,7 +16,7 @@ class Recognizer():
     
     def __init__(self, arc_model_name, arc_model_path, size_to_predict, image_size):
         
-        #防止因图缺失或模型缺失导致模型循环读入
+        #prevent recurrent reading
         self.arc_model_name = arc_model_name
         path = arc_model_path.replace("/","\\")
         model_name = path.split("\\")[-1]

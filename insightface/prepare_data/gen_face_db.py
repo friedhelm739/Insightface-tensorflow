@@ -78,7 +78,7 @@ def main(args):
             
         embds[idx,:] = embd_tp_save
         l2_embds[idx,:] = embd_tp_save/np.linalg.norm(embd_tp_save, axis=1, keepdims=True)
-        # num 代表embd平均的数量，label代表列号
+        # num represents numbers of embd,label represents the column number
         
         sql = "INSERT INTO face_data(FaceName,EmbdNums, ColumnNum) VALUES ('%s', %.4f, %d)"%(person_name, num, label)
         try:
@@ -102,10 +102,10 @@ if __name__ == "__main__":
     cursor.execute("alter database face_db character set gbk;")
     cursor.execute("CREATE TABLE IF NOT EXISTS face_data(FaceName VARCHAR(50), EmbdNums INT, ColumnNum INT);")
 
-    User = namedtuple('User', ['input_dir', 'arc_model_name', 'arc_model_path', 'mtcnn_model_path', "output_dir"])
-    args = User(input_dir=config.custom_dir, arc_model_name=config.arc_model_name, arc_model_path=config.arc_model_path, mtcnn_model_path=config.mtcnn_model_path, output_dir=config.embds_save_dir)
+    #User = namedtuple('User', ['input_dir', 'arc_model_name', 'arc_model_path', 'mtcnn_model_path', "output_dir"])
+    #args = User(input_dir=config.custom_dir, arc_model_name=config.arc_model_name, arc_model_path=config.arc_model_path, mtcnn_model_path=config.mtcnn_model_path, output_dir=config.embds_save_dir)
     
-    #args = arg_parse()
+    args = arg_parse()
     main(args)
     
     cursor.close()
