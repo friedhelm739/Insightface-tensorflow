@@ -26,7 +26,6 @@ version 0.3:
 
 ## Summarize
 
-* Replacing leaky_relu by prelu could cause up to 5% accurates down while the whole structure of model is inherited from reference code num.2 without any change.However, which activation function the original code used is prelu;
 * Face recognization accuracy is greatly disturbed by face detection;
 
 ## Face Recognization System
