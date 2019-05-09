@@ -1,6 +1,8 @@
 # Insightface-tensorflow
 
-* version 0.3 updating；
+* version 0.4 updating; 
+
+>There may be some bugs in the code,please contact me if you find some of them,thank you~
 
 Redo [ArcFace Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/abs/1801.07698)，some of re-releazing codes are referenced and list below,appreciate so much to your opensource.
 
@@ -11,9 +13,9 @@ Redo [ArcFace Additive Angular Margin Loss for Deep Face Recognition](https://ar
 
 ## Enviroment
 
-version 0.3:
+version 0.4:
 
-* ubuntu16.04 + 2*GTX 1080ti + Python3.6 + Anaconda5.2.0 + Tensorflow1.7-gpu + MySQL5.7.25
+* ubuntu16.04 + 2*GTX 1080ti + Python3.6 + Anaconda5.2.0 + Tensorflow1.7-gpu + MySQL5.7.25 + PyQt5
 
 ## Results
 
@@ -30,7 +32,9 @@ version 0.3:
 
 ## Face Recognization System
 
-Face recognizer is in */recognizer*，Face detection is based on my [MTCNN](https://github.com/friedhelm739/MTCNN-tensorflow) repository；
+### Face recognizer
+
+Face recognizer is in */recognizer/arcface_recognizer.py*，Face detection is based on my [MTCNN](https://github.com/friedhelm739/MTCNN-tensorflow) repository；
 
 overview of face-recognizer's interface：
 
@@ -40,9 +44,15 @@ overview of face-recognizer's interface：
 * align_face ： interface of face align;
 * recognize ： interface of face recognization, output recognization result and bounding-box(es) of face(s);
 
->Extended interface(update in future version)：
+>Extended interface：
 
-* add_customs ： add fresh person information to database,or used like add_embds;
-* add_embds ： update embedding information of target member(s) from database(old data will update by average);
-* update_customs ： update embedding information of target member(s) from database(old data will be replaced);
-* del_customs : delete all information of target member(s) from database;
+* add_customs ： add fresh person data to database;
+* add_embds ： update embedding data of target member(s) from database(old data will update by average increment);
+* update_customs ： update embedding data of target member(s) from database(old data will be replaced);
+* del_customs : delete data of target member(s) from database;
+
+### GUI
+
+It's a basic GUI ,a more functional interface will be updated in future version.
+
+![GUI](./picture/GUI.jpg)
