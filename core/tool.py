@@ -30,7 +30,7 @@ def preprocess(img, bbox=None, landmark=None, **kwargs):
     if image_size[1]==112:
         src[:,0] += 8.0
         
-    if ((landmark is not None)&(kwargs.get('align', True))):
+    if landmark is not None:
         assert len(image_size)==2
         dst = landmark.astype(np.float32)
         

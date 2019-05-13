@@ -63,9 +63,8 @@ class Arcface_recognizer():
         self.l2_face_data_name = l2_face_data_name     
         self.raw_face_data_name = raw_face_data_name  
         
-        
     
-    def align_face(self, img, _bbox, _landmark, if_align=True):
+    def align_face(self, img, _bbox, _landmark):
         """
         used for aligning face
     
@@ -86,87 +85,102 @@ class Arcface_recognizer():
         warped = np.zeros((num,self.img_size_list[0],self.img_size_list[1],3))
         
         for i in range(num):
-            warped[i,:] = preprocess(img, bbox=_bbox[i], landmark=_landmark[i], image_size=self.image_size, align=if_align)
+            warped[i,:] = preprocess(img, bbox=_bbox[i], landmark=_landmark[i], image_size=self.image_size)
         
         return warped
 
         
-    def get_embd(self, img, detect_method="single", print_sign=False, if_align=True):
+    def get_embd(self, img, **kwargs):
         """
         used for getting embeddings
         
         Parameters:
         ----------
             img : numpy.array
-            detect_method : str
-            print_sign : bool
-            if_align : bool
+            
+           kwargs:     
+                detect_method : str
+                print_sign : bool
+                if_align : bool
                 
         Returns:
         -------
-            numpy.array 
-        
+            embd: list
+            bounding_boxes: list (x1,y1,x2,y2）
             get_embd
         """                       
-        if(detect_method=="single"):
-            bounding_boxes, points = self.face_detector.detect_single_face(img,print_sign)
+        if (kwargs.kwargs.get('detect_method', "single")=="single"):
+            bounding_boxes, points = self.face_detector.detect_single_face(img,kwargs.get('print_sign', False))
         else: 
-            bounding_boxes, points = self.face_detector.detect_face(img,print_sign)
+            bounding_boxes, points = self.face_detector.detect_face(img,kwargs.get('print_sign', False))
             
         if np.shape(bounding_boxes)[0] == 0:
-            return None
-
-        warped = self.align_face(img, bounding_boxes, points, if_align)
+            return None, None
+        
+        if kwargs.get('if_align', True):
+            warped = self.align_face(img, bounding_boxes, points)
+        else :
+            warped = np.zeros((len(bounding_boxes), self.img_size_list[0], self.img_size_list[1], 3))
+            for i in range(len(bounding_boxes)):
+                
+                img_face = img[bounding_boxes[i][1]:bounding_boxes[i][3], bounding_boxes[i][0]:bounding_boxes[i][2], :]
+                img_face = cv2.resize(img_face, (self.img_size_list[0], self.img_size_list[1]))
+                warped[i] = img_face
+        
+        warped = (warped-127.5)/128 
         embd = self.recognizer.predict(warped)
             
         return embd, bounding_boxes
     
 
-    def recognize(self, img, threathold=1.5, recognize_mode="single", detect_method="single", print_sign=False, if_align=True):
+    def recognize(self, img, **kwargs):
         """
         used for recognizing
         
         Parameters:
         ----------
             img : numpy.array
-            threathold: int
-            recognize_mode :str
-            detect_method : str
-            print_sign : bool
-            if_align : bool
+            
+            kwargs:
+                threathold: int
+                recognize_mode :str
+                detect_method : str
+                print_sign : bool
+                if_align : bool
                 
         Returns:
         -------
             names: list 
-            bounding_boxes :list
+            bounding_boxes :list (x1,y1,x2,y2）
             
             recognize
         """    
         names = []
-        embds, bounding_boxes = self.get_embd(img, detect_method, print_sign, if_align)
-        
+        embds, bounding_boxes = self.get_embd(img, kwargs)
+
         if not os.path.exists(self.load_l2_dir):
             raise Exception(''' Face Data "%s.npy" Does Not Exists '''%(self.l2_face_data_name))
             
         embds_db = np.load(self.load_l2_dir)
         embds_db = np.squeeze(embds_db) 
         
+        
         for idx in range(len(embds)):
             
             embd = embds[idx]
+
             embd = np.reshape(embd,(1,config.model_params["embd_size"]))
             embd = embd/np.linalg.norm(embd, axis=1, keepdims=True)
 
             diff = np.subtract(embds_db, embd)
             dist = np.sum(np.square(diff),1)
+
+            column = np.where(dist < kwargs.get('threathold', 1))[0]
             
-            column = np.where(dist<threathold)[0]
-            print(column)
-            
-            if(len(column) == 1 or recognize_mode != "single"):
+            if(len(column) == 1 or kwargs.get('recognize_mode', "single") != "single"):
                 
                 for i in range(len(column)):
-                    self.cursor.execute('''SELECT FaceName from %s WHERE ColumnNum = %d;'''%(self.tabel, column[i]))
+                    self.cursor.execute('''SELECT FaceName from %s WHERE ColumnNum = %d;'''%(self.table, column[i]))
                     name_data = self.cursor.fetchall()
                     name = name_data[0][0]
                     names.append(name)
@@ -176,17 +190,19 @@ class Arcface_recognizer():
         return names, bounding_boxes
     
     
-    def add_customs(self, input_dir, detect_method="single", print_sign=False, if_align=True, replace_flag=False, pic_format_list=["jpg","png","jpeg","bmp"]):
+    def add_customs(self, input_dir, **kwargs):
         """
         used for adding customs' data and adding embds of existing customs
         
         Parameters:
         ----------
             input_dir : str
-            detect_method : str
-            print_sign : bool
-            if_align : bool
-            replace_flag :bool    
+            
+            kwargs:
+                detect_method : str
+                print_sign : bool
+                if_align : bool
+                replace_flag :bool    
             
         Returns:
         -------
@@ -197,7 +213,6 @@ class Arcface_recognizer():
         if not os.path.exists(input_dir):
             raise Exception("input dir does not exists")
 
-        recognizer = self.recognizer
         input_lists = os.listdir(input_dir)
 
         #find the missing label by adding auto_increment primary key into table
@@ -206,6 +221,8 @@ class Arcface_recognizer():
         self.cursor.execute("SELECT Crement-1 FROM %s WHERE Crement-1 NOT IN (SELECT ColumnNum FROM %s) ;"%(self.table,self.table))
         ColumnNum_data_loss = self.cursor.fetchall()  
 
+        if not os.path.exists(config.embds_save_dir):
+            os.makedirs(config.embds_save_dir)
             
         try:
             #there are two conditions 
@@ -233,20 +250,16 @@ class Arcface_recognizer():
                     continue
         
                 num = 0.0
-                print(person_name)
                 embd_tp_save = np.zeros((1,512))
                 for img_name in os.listdir(_subdir):
                     
-                    if img_name.split(".")[-1] not in pic_format_list:
-                        continue
-
                     image_path = os.path.join(_subdir, img_name)
-                    img = cv2.imread(image_path)
+                    img=cv2.imdecode(np.fromfile(image_path,dtype=np.uint8),-1)
                     
                     if(min(img.shape[:2])<12):
                         raise Exception("%s size can not less than 12*12"%(img_name))
                         
-                    embd, bounding_boxes = recognizer.get_embd(img, detect_method, print_sign, if_align)
+                    embd, bounding_boxes = self.get_embd(img, kwargs)
                     if embd is None:
                         continue
                         
@@ -281,7 +294,7 @@ class Arcface_recognizer():
                     self.cursor.execute("select EmbdNums,ColumnNum from %s where FaceName ='%s';"%(self.table, person_name))
                     EmbdNums,ColumnNum = self.cursor.fetchall()[0]  
                     
-                    if not replace_flag:
+                    if not kwargs.get('replace_flag', False):
                         embd_all = (embds[ColumnNum,:] * EmbdNums) + (embd_tp_save * num)
                         embds[ColumnNum,:] = embd_all/(EmbdNums + num)
                         embds_db[ColumnNum,:] = embd_all/np.linalg.norm(embd_all, axis=1, keepdims=True)
@@ -324,16 +337,18 @@ class Arcface_recognizer():
         return 
 
 
-    def add_embds(self,input_dir, detect_method="single", print_sign=False, if_align=True, pic_format_list=["jpg","png","jpeg","bmp"]):
+    def add_embds(self,input_dir, **kwargs):
         """
         used for adding embeddings
         
         Parameters:
         ----------
             input_dir : str
-            detect_method : str
-            print_sign : bool
-            if_align : bool
+            
+            kwargs:
+                detect_method : str
+                print_sign : bool
+                if_align : bool
                 
         Returns:
         -------
@@ -341,20 +356,22 @@ class Arcface_recognizer():
         
             add_embds
         """        
-        return self.add_customs(input_dir, detect_method, print_sign, if_align, pic_format_list)
+        return self.add_customs(input_dir, kwargs)
     
     
-    
-    def update_customs(self, input_dir, detect_method="single", print_sign=False, if_align=True, pic_format_list=["jpg","png","jpeg","bmp"]):
+    def update_customs(self, input_dir, **kwargs):
         """
         used for replacing customs' old data
         
         Parameters:
         ----------
             input_dir : str
-            detect_method : str
-            print_sign : bool
-            if_align : bool
+            
+            kwargs:
+                detect_method : str
+                print_sign : bool
+                if_align : bool
+                replace_flag: bool
                 
         Returns:
         -------
@@ -362,7 +379,7 @@ class Arcface_recognizer():
         
             add_customs
         """    
-        return self.add_customs(input_dir, detect_method, print_sign, if_align, replace_flag=True, pic_format_list)   
+        return self.add_customs(input_dir, kwargs)   
      
         
     def del_customs(self, person_name_list):
@@ -387,6 +404,14 @@ class Arcface_recognizer():
                 self.db.rollback()
                 raise Exception('''mysql "DELETE" action error in FaceName %d"'''%(person_name_list[idx]))
         
+        self.cursor.execute("SELECT * FROM %s ;"%(self.table))
+        is_empty = self.cursor.fetchall()
+        #prevent Memory leak and column error
+        if(len(is_empty)==0):
+            if os.path.exists(self.load_raw_dir):
+                os.remove(self.load_raw_dir)
+            if os.path.exists(self.load_l2_dir):    
+                os.remove(self.load_l2_dir)
         return 
     
     

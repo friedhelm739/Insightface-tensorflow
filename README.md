@@ -29,6 +29,7 @@ version 0.4:
 ## Summarize
 
 * Face recognization accuracy is greatly disturbed by face detection;
+* One of the most important and confuse things is to select the proper threshold to recognize;
 
 ## Face Recognization System
 
